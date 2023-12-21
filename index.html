@@ -16,39 +16,55 @@
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
+    <form id="username-form" action="">
+      <input id="username-input" autocomplete="off" /><button>Send</button>
+    </form>
+    <ul id="messages" ></ul>
+    <form id="messages-form" action="">
+      <input id="messages-input" autocomplete="off" /><button>Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        var socket = io();
+      var socket = io();
+      var messages = document.getElementById('messages');
+      var usernameForm = document.getElementById('username-form');
+      var usernameInput = document.getElementById('username-input');
+      var messagesForm = document.getElementById('messages-form');
+      var messagesInput = document.getElementById('messages-input');
 
-        var messages = document.getElementById('messages');
-        var form = document.getElementById('form');
-        var input = document.getElementById('input');
+      let username;
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (input.value) {
-            socket.emit('chat message', input.value);
-            input.value = '';
-            }
-        });
+      usernameForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (usernameInput.value) {
+          username = usernameInput.value;
+          socket.emit('change username', username);
+          usernameInput.value = '';
+        }
+      });
 
-        socket.on('chat message', function(msg) {
-            var item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        });
+      messagesForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (messagesInput.value) {
+          socket.emit('chat message', { user: username, message: messagesInput.value });
+          messagesInput.value = '';
+        }
+      });
 
-        socket.on('connection status', function(msg) {
-            var item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        });
+      messagesInput.addEventListener('input', (e) => {
+        e.preventDefault();
+        socket.emit('chat message', { user: '', message: `${username} is typing ...` });
+      });
+
+      socket.on('chat message', function(data) {
+        var item = document.createElement('li');
+        {(data.user && messages.lastElementChild != `${username} is typing ...`) ?
+        item.textContent = `${data.user}: ${data.message}`:
+        item.textContent = `${data.message}`}
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+
     </script>
   </body>
 </html>
