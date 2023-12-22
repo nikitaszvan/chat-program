@@ -31,7 +31,8 @@ io.on('connection', (socket) => {
 
     socket.on('typing notification', (data) => {
         socket.user = data.user;
-        socket.broadcast.emit('chat message', { user: '', message: `${socket.user} is typing ...` });
+        socket.message = data.message;
+        socket.broadcast.emit('chat message', { user: '', message: data.message});
     });
 
     socket.on('disconnect', () => {

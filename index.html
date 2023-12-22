@@ -33,6 +33,7 @@
       var messagesInput = document.getElementById('messages-input');
 
       let username;
+      let isTyping = false;
 
       usernameForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -53,17 +54,30 @@
 
       messagesInput.addEventListener('input', (e) => {
         e.preventDefault();
-        socket.emit('chat message', { user: '', message: `${username} is typing ...` });
+        socket.emit('typing notification', { user: '', message: `${username} is typing ...` });
       });
 
-      socket.on('chat message', function(data) {
-        var item = document.createElement('li');
-        {(data.user && messages.lastElementChild != `${username} is typing ...`) ?
-        item.textContent = `${data.user}: ${data.message}`:
-        item.textContent = `${data.message}`}
+    socket.on('chat message', function(data) {
+      var item = document.createElement('li');
+      if (messages.lastElementChild) {
+        isTyping = messages.lastElementChild.textContent.includes('is typing ...');
+      }
+
+      if (!isTyping) {
+        item.textContent = data.user ? `${data.user}: ${data.message}` : `${data.message}`;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
-      });
+      }
+
+      else {
+        messages.removeChild(messages.lastElementChild);
+        item.textContent = data.user ? `${data.user}: ${data.message}` : `${data.message}`;
+        messages.appendChild(item);
+      }
+
+    });
+
+
 
     </script>
   </body>
