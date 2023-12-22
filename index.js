@@ -10,17 +10,20 @@ const io = new Server(server);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let number_user = 1;
+
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
 io.on('connection', (socket) => {
-    socket.broadcast.emit('chat message', { user: '', message: `User has joined the chat`});
+    socket.broadcast.emit('chat message', { user: '', message: `User${number_user} has joined the chat`});
+    number_user += 1;
 
     socket.on('change username', (newUsername) => {
         const oldUsername = socket.username || 'User';
         socket.username = newUsername;
-        socket.broadcast.emit('chat message', { user: '', message: `${oldUsername} changed their username to ${newUsername }`});
+        socket.broadcast.emit('chat message', { user: '', message: `${oldUsername} changed their username to ${newUsername}`});
     });
 
     socket.on('chat message', (data) => {
