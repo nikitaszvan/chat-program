@@ -47,34 +47,52 @@
       messagesForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (messagesInput.value) {
-          socket.emit('chat message', { user: username, message: messagesInput.value });
+          socket.emit('chat message', { user: '', message: messagesInput.value });
           messagesInput.value = '';
         }
       });
 
       messagesInput.addEventListener('input', (e) => {
         e.preventDefault();
-        socket.emit('typing notification', { user: '', message: `${username} is typing ...` });
+        socket.emit('typing notification', { user: '', message: messagesInput.value });
       });
 
     socket.on('chat message', function(data) {
       var item = document.createElement('li');
       if (messages.lastElementChild) {
         isTyping = messages.lastElementChild.textContent.includes('is typing ...');
+        console.log(0);
       }
 
-      if (!isTyping) {
+      if (!isTyping && data.submit) {
         item.textContent = data.user ? `${data.user}: ${data.message}` : `${data.message}`;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
+        console.log(1);
       }
 
-      else {
+      else if (isTyping && data.submit) { 
         messages.removeChild(messages.lastElementChild);
-        item.textContent = data.user ? `${data.user}: ${data.message}` : `${data.message}`;
+        item.textContent = `${data.user}: ${data.message}`;
         messages.appendChild(item);
+        console.log(2);
       }
 
+      else if (!isTyping && !data.submit) {
+        item.textContent = `${data.message}`;
+        messages.appendChild(item);
+        console.log(3);
+      }
+
+      else if (isTyping && !data.submit) {
+        if (!data.inputContent) {
+          messages.removeChild(messages.lastElementChild);
+          console.log(4);
+        }
+        console.log(5);
+      }
+
+// isTyping && !data.submit
     });
 
 

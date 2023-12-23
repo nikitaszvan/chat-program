@@ -17,26 +17,25 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    socket.broadcast.emit('chat message', { user: '', message: `User${number_user} has joined the chat`});
+    socket.username = `User${number_user}`;
+    socket.broadcast.emit('chat message', { user: '', message: `${socket.username} has joined the chat`});
     number_user += 1;
 
     socket.on('change username', (newUsername) => {
         const oldUsername = socket.username || 'User';
         socket.username = newUsername;
-        socket.broadcast.emit('chat message', { user: '', message: `${oldUsername} changed their username to ${newUsername}`});
+        socket.broadcast.emit('chat message', { user: '', message: `${oldUsername} changed their username to ${socket.username}`});
     });
 
     socket.on('chat message', (data) => {
-        socket.user = data.user;
         socket.message = data.message;
-        io.emit('chat message', { user: data.user, message: data.message });
+        io.emit('chat message', { user: socket.username, message: data.message, submit: true });
     });
 
     socket.on('typing notification', (data) => {
-        socket.user = data.user;
-        socket.message = data.message;
-        socket.broadcast.emit('chat message', { user: '', message: data.message});
-    });
+            socket.broadcast.emit('chat message', { user: '', message: `${socket.username} is typing ...`, inputContent: data.message, submit: false});
+        }
+    );
 
     socket.on('disconnect', () => {
         io.emit('chat message', { user: '', message: ` ${socket.username} has disconnected` });
