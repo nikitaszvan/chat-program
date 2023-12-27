@@ -4,8 +4,28 @@
     <title>Socket.IO chat</title>
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-      .local-user-message {
-        text-align: right;
+      #messages {
+        list-style-type: none;
+        margin: 0; 
+        padding: 0;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #messages > * {
+        width: 20%;
+        padding: 10px;
+        overflow-wrap: break-word;
+        background-color: aquamarine;
+        border-radius: 20%;
+      } 
+
+      .local {
+        align-self: flex-end;
+      }
+      .general {
+        align-self: center;
       }
     </style>
   </head>
@@ -27,7 +47,8 @@
       var messagesInput = document.getElementById('messages-input');
 
       let username;
-      let isTyping = false;
+      let isTyping;
+      var workerId;
 
       usernameForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -50,12 +71,26 @@
         e.preventDefault();
         socket.emit('typing notification', { user: '', message: messagesInput.value });
       });
+    
+    socket.on('worker_id', function(data) {
+      workerId = data.workerId;
+      console.log('Received worker_id from server:', workerId);
+    });
 
     socket.on('chat message', function(data) {
       var item = document.createElement('li');
-      if (data.checkLocalUser) {
-       item.classList.add('local-user-message'); // Add a class for styling
+      const isLocalUser = data.workerId === workerId;
+
+      if (data.class === 'general') {
+        item.classList.add('general');
       }
+      else if (isLocalUser) {
+       item.classList.add('local');
+      }
+      else {
+        console.log(data.workerId, workerId);
+      }
+      
       if (messages.lastElementChild) {
         isTyping = messages.lastElementChild.textContent.includes('is typing ...');
       }
@@ -69,6 +104,7 @@
       else if (isTyping && data.submit) { 
         messages.removeChild(messages.lastElementChild);
         item.textContent = `(${data.uniqueID}) ${data.user}: ${data.message}`;
+        // item.textContent = data.checkLocalUser;
         messages.appendChild(item);
       }
 

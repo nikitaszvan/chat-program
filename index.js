@@ -38,27 +38,25 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   try {
   socket.username = `User${(workerId - 1)}`;
-  socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${socket.username} has joined the chat` });
-
+  socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${socket.username} has joined the chat`, class: 'general'});
 
   socket.on('change username', (newUsername) => {
     const oldUsername = socket.username || `User${(workerId - 1)}`;
     socket.username = newUsername;
-    socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${oldUsername} changed their username to ${socket.username}`});
+    socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${oldUsername} changed their username to ${socket.username}`, class: 'general'});
   });
 
   socket.on('chat message', (data) => {
-    const isLocalUser = data.workerId ==- workerId;
-      socket.message = data.message;
-      io.emit('chat message', { user: socket.username, message: data.message, uniqueID: `(${socket.id.slice(-5)})`, submit: true, checkLocalUser: isLocalUser });
+      socket.emit('worker_id', { workerId: workerId });
+      io.emit('chat message', { user: socket.username, message: data.message, uniqueID: `${socket.id.slice(-5)}`, submit: true, workerId: workerId});
   });
 
   socket.on('typing notification', (data) => {
-      socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${socket.username} is typing ...`, inputContent: data.message, submit: false});
+      socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${socket.username} is typing ...`, inputContent: data.message, submit: false, class: 'general'});
   });
 
   socket.on('disconnect', () => {
-    io.emit('chat message', { user: '', message: ` (${socket.id.slice(-5)}) ${socket.username} has disconnected` });
+    socket.emit('chat message', { user: '', message: ` (${socket.id.slice(-5)}) ${socket.username} has disconnected`, class: 'general'});
   });
 }
 catch (e) {
