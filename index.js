@@ -30,6 +30,7 @@ const __dirname = path.dirname(__filename);
 
 const workerId = process.env.WORKER_ID;
 const port = process.env.PORT;
+const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
@@ -38,12 +39,14 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   try {
   socket.username = `User${(workerId - 1)}`;
-  socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${socket.username} has joined the chat`, class: 'general'});
+  const d = new Date(Date.now());
+  socket.emit('chat message', {message: `${daysOfWeek[d.getDay()]} - ${d.getHours()}:${d.getMinutes()}`, class: 'general'});
+  socket.broadcast.emit('chat message', { user: '', message: `${socket.username} has joined the chat`, class: 'general'});
 
   socket.on('change username', (newUsername) => {
     const oldUsername = socket.username || `User${(workerId - 1)}`;
     socket.username = newUsername;
-    socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${oldUsername} changed their username to ${socket.username}`, class: 'general'});
+    socket.broadcast.emit('chat message', { user: '', message: `${oldUsername} changed their username to ${socket.username}`, class: 'general'});
   });
 
   socket.on('chat message', (data) => {
@@ -52,11 +55,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('typing notification', (data) => {
-      socket.broadcast.emit('chat message', { user: '', message: `(${socket.id.slice(-5)}) ${socket.username} is typing ...`, inputContent: data.message, submit: false, class: 'general'});
+      socket.broadcast.emit('chat message', { user: '', message: `${socket.username} is typing ...`, inputContent: data.message, submit: false, class: 'general'});
   });
 
   socket.on('disconnect', () => {
-    socket.emit('chat message', { user: '', message: ` (${socket.id.slice(-5)}) ${socket.username} has disconnected`, class: 'general'});
+    socket.emit('chat message', { user: '', message: ` ${socket.username} has disconnected`, class: 'general'});
   });
 }
 catch (e) {

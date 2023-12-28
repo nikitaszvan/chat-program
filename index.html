@@ -4,34 +4,70 @@
     <title>Socket.IO chat</title>
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #username-form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; top: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      
       #messages {
+        top: 3rem;
         list-style-type: none;
         margin: 0; 
         padding: 0;
         text-align: left;
         display: flex;
         flex-direction: column;
+        justify-content: center;
+        font-size: 12px;
       }
 
-      #messages > * {
-        width: 20%;
-        padding: 10px;
+      .worker-1, .worker-2, .worker-3, .worker-4, .worker-5, .worker-6 {
+        max-width: 200px;
         overflow-wrap: break-word;
-        background-color: aquamarine;
-        border-radius: 20%;
+        border-radius: 20px;
+        padding: 8px 15px 8px 15px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        font-family: helvetica;
+        font-size: 14px;
+        margin-left: 15px;
+        align-self: flex-start;
       } 
 
       .local {
         align-self: flex-end;
+        margin-left: 0;
+        margin-right: 15px;
       }
       .general {
         align-self: center;
+        margin: 0;
       }
+
+      .worker-1 {
+        background-color: #99B898;
+      }
+
+      .worker-2 {
+        background-color: #FECEA8;
+      }
+
+      .worker-3 {
+        background-color: #FF847C;
+      }
+
+      .worker-4 {
+        background-color: #E84A5F;
+      }
+
+      .worker-5 {
+        background-color: #2A363B;
+      }
+
+      #messages-form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
     </style>
   </head>
   <body>
     <form id="username-form" action="">
-      <input id="username-input" autocomplete="off" /><button>Send</button>
+      <input id="username-input" autocomplete="off" /><button>Change Username</button>
     </form>
     <ul id="messages" ></ul>
     <form id="messages-form" action="">
@@ -81,11 +117,14 @@
       var item = document.createElement('li');
       const isLocalUser = data.workerId === workerId;
 
+      if (data.workerId) {
+        item.classList.add(`worker-${data.workerId}`);
+      }
       if (data.class === 'general') {
         item.classList.add('general');
       }
       else if (isLocalUser) {
-       item.classList.add('local');
+       item.classList.add(`local`);
       }
       else {
         console.log(data.workerId, workerId);
@@ -96,14 +135,14 @@
       }
 
       if (!isTyping && data.submit) {
-        item.textContent = `(${data.uniqueID}) ${data.user}: ${data.message}`;
+        item.textContent = `${data.message}`;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
       }
 
       else if (isTyping && data.submit) { 
         messages.removeChild(messages.lastElementChild);
-        item.textContent = `(${data.uniqueID}) ${data.user}: ${data.message}`;
+        item.textContent = `${data.message}`;
         // item.textContent = data.checkLocalUser;
         messages.appendChild(item);
       }
