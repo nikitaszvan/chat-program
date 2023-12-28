@@ -83,8 +83,10 @@
       var messagesInput = document.getElementById('messages-input');
 
       let username;
-      let isTyping;
+      var isTyping = new Array(10).fill(!1);
+      var usernameArray = ['User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8'];
       var workerId;
+      let checkTypingNotif;
 
       usernameForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -105,12 +107,24 @@
 
       messagesInput.addEventListener('input', (e) => {
         e.preventDefault();
-        socket.emit('typing notification', { user: '', message: messagesInput.value });
+        socket.emit('typing notification', { user: '', message: messagesInput.value, typingArray: isTyping});
       });
     
     socket.on('worker_id', function(data) {
       workerId = data.workerId;
-      console.log('Received worker_id from server:', workerId);
+      isTyping = data.typingArray || [];
+      if (data.newUsername !== undefined) {
+        usernameArray[workerId-1] = data.newUsername;
+        console.log(usernameArray);
+      }
+      if (data.inputContent) {
+        isTyping[workerId-1] = true;
+        console.log(isTyping);
+      }
+      else {
+        isTyping[workerId-1] = false;
+        console.log(isTyping);
+      }
     });
 
     socket.on('chat message', function(data) {
@@ -131,34 +145,34 @@
       }
       
       if (messages.lastElementChild) {
-        isTyping = messages.lastElementChild.textContent.includes('is typing ...');
+        checkTypingNotif = messages.lastElementChild.textContent.includes('is typing ...');
       }
 
-      if (!isTyping && data.submit) {
+      if (!checkTypingNotif && data.submit) {
         item.textContent = `${data.message}`;
         messages.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
       }
 
-      else if (isTyping && data.submit) { 
+      else if (checkTypingNotif && data.submit) { 
         messages.removeChild(messages.lastElementChild);
         item.textContent = `${data.message}`;
         // item.textContent = data.checkLocalUser;
         messages.appendChild(item);
       }
 
-      else if ((!isTyping || !messages.lastElementChild) && !data.submit) {
+      else if ((!checkTypingNotif || !messages.lastElementChild) && !data.submit) {
         item.textContent = `${data.message}`;
         messages.appendChild(item);
       }
 
-      else if (isTyping && !data.submit) {
+      else if (checkTypingNotif && !data.submit) {
         if (!data.inputContent) {
           messages.removeChild(messages.lastElementChild);
         }
       }
 
-// isTyping && !data.submit
+// checkTypingNotif && !data.submit
     });
 
 

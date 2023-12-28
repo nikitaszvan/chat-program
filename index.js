@@ -46,6 +46,7 @@ io.on('connection', (socket) => {
   socket.on('change username', (newUsername) => {
     const oldUsername = socket.username || `User${(workerId - 1)}`;
     socket.username = newUsername;
+    io.emit('worker_id', { workerId: workerId, newUsername: socket.username});
     socket.broadcast.emit('chat message', { user: '', message: `${oldUsername} changed their username to ${socket.username}`, class: 'general'});
   });
 
@@ -55,7 +56,8 @@ io.on('connection', (socket) => {
   });
 
   socket.on('typing notification', (data) => {
-      socket.broadcast.emit('chat message', { user: '', message: `${socket.username} is typing ...`, inputContent: data.message, submit: false, class: 'general'});
+      io.emit('worker_id', { workerId: workerId, inputContent: data.message, typingArray: data.typingArray, submit: false, class: 'general'});
+      socket.broadcast.emit('chat message', { user: '', message: `${socket.username} is typing ...` });
   });
 
   socket.on('disconnect', () => {
