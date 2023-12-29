@@ -19,7 +19,7 @@
         font-size: 12px;
       }
 
-      .worker-1, .worker-2, .worker-3, .worker-4, .worker-5, .worker-6 {
+      .worker-1, .worker-2, .worker-3, .worker-4, .worker-5, .worker-6, .non-local {
         max-width: 200px;
         overflow-wrap: break-word;
         border-radius: 20px;
@@ -83,10 +83,11 @@
       var messagesInput = document.getElementById('messages-input');
 
       let username;
-      var isTyping = new Array(10).fill(!1);
+      var typingArray = new Array(10).fill(!1);
       var usernameArray = ['User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8'];
       var workerId;
       let checkTypingNotif;
+      var itemPlaceholder = '';
 
       usernameForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -100,83 +101,142 @@
       messagesForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (messagesInput.value) {
-          socket.emit('chat message', { user: '', message: messagesInput.value });
+          socket.emit('chat message', { user: '', message: messagesInput.value, typingArray: typingArray });
           messagesInput.value = '';
         }
       });
 
       messagesInput.addEventListener('input', (e) => {
         e.preventDefault();
-        socket.emit('typing notification', { user: '', message: messagesInput.value, typingArray: isTyping});
+        socket.emit('typing notification', { user: '', message: messagesInput.value, typingArray: typingArray });
       });
     
-    socket.on('worker_id', function(data) {
-      workerId = data.workerId;
-      isTyping = data.typingArray || [];
-      if (data.newUsername !== undefined) {
-        usernameArray[workerId-1] = data.newUsername;
-        console.log(usernameArray);
-      }
-      if (data.inputContent) {
-        isTyping[workerId-1] = true;
-        console.log(isTyping);
-      }
-      else {
-        isTyping[workerId-1] = false;
-        console.log(isTyping);
-      }
-    });
+      socket.on('worker_id', function(data) {
+        workerId = data.workerId;
+        if (data.newUsername !== undefined) {
+          usernameArray[workerId-1] = data.newUsername;
+        }
+        if (data.inputContent) {
+          typingArray[workerId-1] = true;
+        }
+        else if (!data.inputContent || data.disconnect) {
+          typingArray[workerId-1] = false;
+        }
+        console.log(typingArray);
+      });
 
-    socket.on('chat message', function(data) {
-      var item = document.createElement('li');
-      const isLocalUser = data.workerId === workerId;
+      socket.on('chat message', function(data) {
 
-      if (data.workerId) {
-        item.classList.add(`worker-${data.workerId}`);
-      }
-      if (data.class === 'general') {
-        item.classList.add('general');
-      }
-      else if (isLocalUser) {
-       item.classList.add(`local`);
-      }
-      else {
-        console.log(data.workerId, workerId);
-      }
-      
-      if (messages.lastElementChild) {
-        checkTypingNotif = messages.lastElementChild.textContent.includes('is typing ...');
-      }
+        if (data.submit) {
+            console.log(data.workerId, workerId);
+          }
+        var item = document.createElement('li');
+        const isLocalUser = data.workerId === workerId;
+        if (messages.lastElementChild) {
+          checkTypingNotif = messages.lastElementChild.textContent.includes('is typing ...');
+        }
+        else {
+          checkTypingNotif = false;
+        }
+        if (data.class === 'general') {
+          item.classList.add('general');
+        }
 
-      if (!checkTypingNotif && data.submit) {
-        item.textContent = `${data.message}`;
-        messages.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
-      }
+        else if (data.class === 'local') {
+          item.classList.add('local');
+        }
 
-      else if (checkTypingNotif && data.submit) { 
-        messages.removeChild(messages.lastElementChild);
-        item.textContent = `${data.message}`;
-        // item.textContent = data.checkLocalUser;
-        messages.appendChild(item);
-      }
+        
+        else if (data.class === 'non-local') {
+          item.classList.add('non-local');
+        }
+        if (data.workerId) {
+          item.classList.add(`worker-${data.workerId}`);
+        }
+        // if (isLocalUser) {
+        // item.classList.add(`local`);
+        // }
 
-      else if ((!checkTypingNotif || !messages.lastElementChild) && !data.submit) {
-        item.textContent = `${data.message}`;
-        messages.appendChild(item);
-      }
-
-      else if (checkTypingNotif && !data.submit) {
-        if (!data.inputContent) {
+        if (data.type === 'typing notification' && checkTypingNotif && typingArray.every(value => value === false)) {
+          console.log(typingArray);
+          console.log('0');
           messages.removeChild(messages.lastElementChild);
         }
-      }
+        
+        else if (data.type === 'typing notification' && checkTypingNotif && !typingArray.every(value => value === false)){
+          console.log(typingArray);
+          console.log('1');
+          itemPlaceholder = '';
+          typingArray.forEach((value, index) => {
+            if (value === true) {
+              itemPlaceholder = itemPlaceholder + usernameArray[index] + ', ';
+            }
+          });
+          itemPlaceholder = itemPlaceholder.slice(0, -2) + itemPlaceholder.slice(-1) + 'is typing ...';
+          if (messages.lastElementChild.textContent === itemPlaceholder) {
+            item.remove();
+          }
+          else {
+          console.log('List item appended');
+          messages.removeChild(messages.lastElementChild);
+          item.textContent = `${itemPlaceholder}`;
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+          }
+        }
 
-// checkTypingNotif && !data.submit
-    });
+        else if (data.type === 'typing notification' && !checkTypingNotif && !typingArray.every(value => value === false)) {
+          console.log(typingArray);
+          console.log('2');
+          itemPlaceholder = '';
+          
+          typingArray.forEach((value, index) => {
+            if (value === true) {
+              itemPlaceholder = itemPlaceholder + usernameArray[index] + ', ';
+            }
+          });
 
+          itemPlaceholder = itemPlaceholder.slice(0, -2) + itemPlaceholder.slice(-1) + 'is typing ...';
+          
+          if (messages.lastElementChild.textContent.includes(itemPlaceholder)) {
+            item.remove();
+          }
 
+          else {
+          console.log('List item appended');
+          item.textContent = `${itemPlaceholder}`;
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+          }
+        }
 
+        else if (!checkTypingNotif && data.submit) {
+          item.textContent = `${data.message}`;
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        else if (checkTypingNotif && data.submit) { 
+          item.textContent = `${data.message}`;
+          // item.textContent = data.checkLocalUser;
+          messages.insertBefore(item, messages.lastElementChild);
+        }
+
+        else if ((!checkTypingNotif || !messages.lastElementChild) && !data.submit) {
+          if (data.message) {
+          item.textContent = `${data.message}`;
+          messages.appendChild(item);
+          }
+        }
+
+        else if (checkTypingNotif && !data.submit) {
+          if (!data.inputContent) {
+            item.textContent = `${data.message}`;
+            messages.insertBefore(item, messages.lastElementChild);
+            console.log('last');
+          }
+        }
+      });
     </script>
   </body>
 </html>
