@@ -40,30 +40,31 @@ io.on('connection', (socket) => {
   try {
   socket.username = `User${(workerId)}`;
   const d = new Date(Date.now());
-  socket.emit('chat message', {message: `${daysOfWeek[d.getDay()]} - ${d.getHours()}:${d.getMinutes()}`, class: 'general'});
-  socket.broadcast.emit('chat message', { user: '', message: `${socket.username} has joined the chat`, dataInput: false, class: 'general'});
+  socket.emit('chat message', {message: `${daysOfWeek[d.getDay()]} - ${d.getHours()}:${d.getMinutes()}`});
+  socket.broadcast.emit('chat message', { message: `${socket.username} has joined the chat`, workerId: workerId});
 
-  socket.on('change username', (newUsername) => {
+  socket.on('change username', (usernameSubmitted) => {
     const oldUsername = socket.username;
-    socket.username = newUsername;
-    io.emit('worker_id', { workerId: workerId, newUsername: socket.username});
-    socket.broadcast.emit('chat message', { user: '', message: `${oldUsername} changed their username to ${socket.username}`, class: 'general'});
+    socket.username = usernameSubmitted;
+    io.emit('send data', { workerId: workerId, username: socket.username});
+    socket.broadcast.emit('chat message', { message: `${oldUsername} changed their username to ${socket.username}`});
   });
 
-  socket.on('chat message', (data) => {
-      io.emit('worker_id', { workerId: workerId, typingArray: data.typingArray, inputContent: false});
-      socket.emit('chat message', { user: socket.username, message: data.message, uniqueID: `${socket.id.slice(-5)}`, submit: true, class: 'local', workerId: workerId});
-      socket.broadcast.emit('chat message', { user: socket.username, message: data.message, uniqueID: `${socket.id.slice(-5)}`, class: 'non-local', workerId: workerId});
+  socket.on('chat message', (messageSubmitted) => {
+    io.emit('send data', { workerId: workerId });
+    socket.emit('chat message', { message: messageSubmitted, class: 'local', workerId: workerId });
+    socket.broadcast.emit('chat message', { message: messageSubmitted, class: 'non-local', workerId: workerId });
+    io.emit('chat message', null);
   });
 
   socket.on('typing notification', (data) => {
-      io.emit('worker_id', { workerId: workerId, inputContent: data.message, typingArray: data.typingArray, submit: false, class: 'general'});
-      io.emit('chat message', { typingArray: data.typingArray, type: 'typing notification', class: 'general'});
+      io.emit('send data', { workerId: workerId, inputContent: data.message });
+      io.emit('chat message', null);
   });
 
   socket.on('disconnect', () => {
-    io.emit('worker_id', { workerId: workerId, disconnect: true});
-    socket.broadcast.emit('chat message', { user: '', message: ` ${socket.username} has disconnected`, class: 'general', type: 'typing notification'});
+    io.emit('send data', { workerId: workerId, disconnect: true });
+    socket.broadcast.emit('chat message', { message: `${socket.username} has disconnected` });
   });
 }
 catch (e) {
