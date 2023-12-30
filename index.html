@@ -86,6 +86,7 @@
       var usernameArray = ['User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8'];
       var checkTypingNotif;
       var itemPlaceholder;
+      var workerId;
 
       usernameForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -109,62 +110,61 @@
     
       socket.on('send data', function(data) {
         workerId = data.workerId;
-        const workerIndex = data.workerId-1;
-
+        const workerIndex = workerId-1;
         if (data.username !== undefined) {
           usernameArray[workerIndex] = data.username;
         }
-
         typingArray[workerIndex] = data.disconnect ? false : Boolean(data.inputContent);
       });
 
       socket.on('chat message', function(data) {
-
         var item = document.createElement('li');
-        const checkLastElement = messages.lastElementChild;
+        const lastElement = messages.lastElementChild;
+        const allFalseArray = typingArray.every(value => value === false);
+        checkTypingNotif =  lastElement && lastElement.textContent.includes('is typing ...');
 
-        checkTypingNotif =  checkLastElement && checkLastElement.textContent.includes('is typing ...');
         if (data) {
-          item.classList.add(data.class);
-        } else {
-          item.classList.add('general');
+          item.textContent = `${data.message}`;
+          checkTypingNotif ? messages.insertBefore(item, lastElement) : messages.appendChild(item) ;
+          window.scrollTo(0, document.body.scrollHeight);
+          if (data.class) {
+            item.classList.add(data.class);
+            item.classList.add(`worker-${workerId}`);
+          }
+          else {
+            if (!data.class) {
+              item.classList.add('general');
+            }
+          }
         }
-
-        if (workerId) {
-          item.classList.add(`worker-${workerId}`);
-        }
-
-        if (!data && checkTypingNotif) {
-          messages.removeChild(checkLastElement);
-
-          if (typingArray.some(value => value === true)) {
-            itemPlaceholder = typingArray
-            .map((value, index) => (value ? usernameArray[index] : ''))
-            .filter(Boolean)
-            .join(', ');
-
+        else {
+          console.log(workerId);
+          if (allFalseArray) {
+            if (checkTypingNotif) {
+            messages.removeChild(lastElement);
+            }
+          }
+          else {
+            itemPlaceholder = '';
+            typingArray.forEach((value, index) => {
+              if (value) {
+                itemPlaceholder = itemPlaceholder + usernameArray[index] + ', ';
+              }
+            });
             itemPlaceholder = itemPlaceholder.slice(0, -2) + itemPlaceholder.slice(-1) + 'is typing ...';
-
-            if (checkLastElement?.textContent === itemPlaceholder) {
+            if (checkTypingNotif && lastElement.textContent === itemPlaceholder) {
               item.remove();
-            } else {
-              item.textContent = itemPlaceholder;
+            }
+            else {
+              checkTypingNotif && messages.removeChild(lastElement);
+              item.textContent = `${itemPlaceholder}`;
               messages.appendChild(item);
+              item.classList.add('general');
               window.scrollTo(0, document.body.scrollHeight);
             }
           }
-
-        } else if ((!checkTypingNotif || !checkLastElement) && data.message) {
-          item.textContent = data.message;
-          messages.appendChild(item);
-          window.scrollTo(0, document.body.scrollHeight);
-        } else {
-          item.textContent = data.message;
-          messages[checkTypingNotif ? 'insertBefore' : 'appendChild'](item, checkLastElement);
-          window.scrollTo(0, document.body.scrollHeight);
         }
-        
-});
+      });
     </script>
   </body>
 </html>
