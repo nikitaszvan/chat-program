@@ -40,16 +40,16 @@ io.on('connection', (socket) => {
   try {
   socket.username = `User${(workerId)}`;
   const d = new Date(Date.now());
-  io.emit('send data', { workerId: workerId });
+  // io.emit('send data', { workerId: workerId });
   socket.emit('chat message', {message: `${daysOfWeek[d.getDay()]} - ${d.getHours()}:${d.getMinutes()}`});
-  socket.broadcast.emit('chat message', { message: `${socket.username} has joined the chat`});
+  // socket.broadcast.emit('chat message', { message: `${socket.username} has joined the chat`});
   io.emit('chat message', null);
 
   socket.on('change username', (usernameSubmitted) => {
     const oldUsername = socket.username;
     socket.username = usernameSubmitted;
     io.emit('send data', { workerId: workerId, username: socket.username});
-    socket.broadcast.emit('chat message', { message: `${oldUsername} changed their username to ${socket.username}`});
+    // socket.broadcast.emit('chat message', { message: `${oldUsername} changed their username to ${socket.username}`});
   });
 
   socket.on('chat message', (messageSubmitted) => {
@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     io.emit('send data', { workerId: workerId, disconnect: true });
-    socket.broadcast.emit('chat message', { message: `${socket.username} has disconnected`});
+    // socket.broadcast.emit('chat message', { message: `${socket.username} has disconnected`});
   });
 }
 catch (e) {

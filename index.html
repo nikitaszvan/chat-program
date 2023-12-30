@@ -119,16 +119,30 @@
 
       socket.on('chat message', function(data) {
         var item = document.createElement('li');
+        var messageUsername = document.createElement('li');
         const lastElement = messages.lastElementChild;
         const allFalseArray = typingArray.every(value => value === false);
         checkTypingNotif =  lastElement && lastElement.textContent.includes('is typing ...');
 
+
         if (data) {
+          if (checkTypingNotif && lastElement.previousElementSibling) {
+            if (lastElement.previousElementSibling.className != workerId) {
+              console.log(lastElement.previousElementSibling.textContent);
+              messageUsername.textContent = workerId;
+              messages.insertBefore(messageUsername, lastElement);
+            }
+            else {
+              messageUsername.remove();
+            }
+
+          }
           item.textContent = `${data.message}`;
           checkTypingNotif ? messages.insertBefore(item, lastElement) : messages.appendChild(item) ;
           window.scrollTo(0, document.body.scrollHeight);
           if (data.class) {
             item.classList.add(data.class);
+            messageUsername.classList.add(data.class);
             item.classList.add(`worker-${workerId}`);
           }
           else {
