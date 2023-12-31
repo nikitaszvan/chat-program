@@ -12,34 +12,76 @@
         list-style-type: none;
         margin: 0; 
         padding: 0;
-        text-align: left;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        font-size: 12px;
+        font-size: 14px;
+        color: rgb(0, 0, 0, 0.7);
       }
 
-      .worker-1, .worker-2, .worker-3, .worker-4, .worker-5, .worker-6, .non-local {
+      .worker-1, .worker-2, .worker-3, .worker-4, .worker-5, .worker-6 {
         max-width: 200px;
         overflow-wrap: break-word;
         border-radius: 20px;
         padding: 8px 15px 8px 15px;
-        margin-top: 5px;
-        margin-bottom: 5px;
+        margin-top: 2px;
+        margin-bottom: 2px;
         font-family: helvetica;
-        font-size: 14px;
-        margin-left: 15px;
-        align-self: flex-start;
+        color: black;
       } 
 
       .local {
+        font-size: 12px;
+        margin-right: 25px;
         align-self: flex-end;
-        margin-left: 0;
-        margin-right: 15px;
+        border-bottom-right-radius: 0;
       }
+
+      .non-local {
+        font-size: 12px;
+        margin-left: 25px;
+        align-self: flex-start;
+        border-bottom-left-radius: 0;
+      }
+
       .general {
-        align-self: center;
+        font-size: 12px;
         margin: 0;
+        align-self: center;
+      }
+
+      .not-last-message {
+        border-radius: 20px;
+      }
+
+      .message-username {
+        display: flex;
+        align-items: center;
+      }
+
+      .message-username > p {
+        margin: 0;
+      }
+
+      .local.username-label > p {
+        margin-right: 4px;
+      }
+
+      .non-local.username-label > p {
+        margin-left: 4px;
+      }
+
+      .status-symbol {
+        border-radius: 50%;
+        background-color: green;
+        height: 8px;
+        width: 8px;
+        margin-top: 4px;
+      }
+
+      .typing {}
+
+      .offline {
+        background-color: grey;
       }
 
       .worker-1 {
@@ -63,6 +105,12 @@
       }
 
       #messages-form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #messages-input { width: 90%; }
+
+      #messages-form > button {
+        background-color: transparent;
+        border: none;
+      }
     </style>
   </head>
   <body>
@@ -83,14 +131,14 @@
       var messagesInput = document.getElementById('messages-input');
 
       var typingArray = new Array(12).fill(!1);
-      var usernameArray = ['User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8'];
-      var checkTypingNotif;
+      // var checkTypingNotif;
       var itemPlaceholder;
-      var workerId;
+      let username;
 
       usernameForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (usernameInput.value) {
+
           socket.emit('change username', usernameInput.value);
           usernameInput.value = '';
         }
@@ -110,75 +158,94 @@
     
       socket.on('send data', function(data) {
         workerId = data.workerId;
+        username = data.username;
         const workerIndex = workerId-1;
-        if (data.username !== undefined) {
-          usernameArray[workerIndex] = data.username;
-        }
         typingArray[workerIndex] = data.disconnect ? false : Boolean(data.inputContent);
       });
 
       socket.on('chat message', function(data) {
-        var item = document.createElement('li');
-        var messageUsername = document.createElement('li');
         const lastElement = messages.lastElementChild;
+        var item = document.createElement('li');
+        var messageUsername = document.createElement('div');
+        var statusSymbol = document.createElement('div');
+        statusSymbol.classList.add('status-symbol');
+        var usernameLabel = document.createElement('p');
         const allFalseArray = typingArray.every(value => value === false);
-        checkTypingNotif =  lastElement && lastElement.textContent.includes('is typing ...');
+        // checkTypingNotif =  lastElement && lastElement.textContent.includes('is typing ...') && lastElement.classList.contains('general');
 
+        messageUsername.classList.add('message-username');
 
         if (data) {
-          if (checkTypingNotif && lastElement.previousElementSibling) {
-            if (lastElement.previousElementSibling.className != workerId) {
-              console.log(lastElement.previousElementSibling.textContent);
-              messageUsername.textContent = workerId;
-              messages.insertBefore(messageUsername, lastElement);
-            }
-            else {
-              messageUsername.remove();
-            }
-
-          }
           item.textContent = `${data.message}`;
-          checkTypingNotif ? messages.insertBefore(item, lastElement) : messages.appendChild(item) ;
+          // checkTypingNotif ? messages.insertBefore(item, lastElement) : 
           window.scrollTo(0, document.body.scrollHeight);
           if (data.class) {
+            if (data.class == 'local') {
+              messageUsername.appendChild(usernameLabel);
+              messageUsername.appendChild(statusSymbol);
+            }
+
+            else {
+              messageUsername.appendChild(statusSymbol);
+              messageUsername.appendChild(usernameLabel);
+            }
             item.classList.add(data.class);
             messageUsername.classList.add(data.class);
+            messageUsername.classList.add('username-label');
             item.classList.add(`worker-${workerId}`);
+            if (lastElement && (item.classList.value == lastElement.classList.value)) {
+            lastElement.classList.add('not-last-message');
+          }
           }
           else {
             if (!data.class) {
               item.classList.add('general');
             }
           }
-        }
-        else {
-          console.log(workerId);
-          if (allFalseArray) {
-            if (checkTypingNotif) {
-            messages.removeChild(lastElement);
+
+          if (lastElement && !lastElement.classList.contains(`worker-${workerId}`)) {
+            usernameLabel.textContent = username;
+            if (!item.textContent.includes('changed their username to') && !item.classList.contains('general')) {
+              messages.appendChild(messageUsername);
+            }
+            else {
+              messageUsername.remove();
             }
           }
           else {
-            itemPlaceholder = '';
-            typingArray.forEach((value, index) => {
-              if (value) {
-                itemPlaceholder = itemPlaceholder + usernameArray[index] + ', ';
-              }
-            });
-            itemPlaceholder = itemPlaceholder.slice(0, -2) + itemPlaceholder.slice(-1) + 'is typing ...';
-            if (checkTypingNotif && lastElement.textContent === itemPlaceholder) {
-              item.remove();
-            }
-            else {
-              checkTypingNotif && messages.removeChild(lastElement);
-              item.textContent = `${itemPlaceholder}`;
-              messages.appendChild(item);
-              item.classList.add('general');
-              window.scrollTo(0, document.body.scrollHeight);
-            }
+            messageUsername.remove();
           }
+          messages.appendChild(item);
         }
+
+        
       });
+        // else {
+        //   if (allFalseArray) {
+            // if (checkTypingNotif) {
+            // messages.removeChild(lastElement);
+            // }
+          // }
+          // else {
+            // itemPlaceholder = '';
+            // typingArray.forEach((value, index) => {
+            //   if (value) {
+            //     itemPlaceholder = itemPlaceholder + usernameArray[index] + ', ';
+            //   }
+            // });
+            // itemPlaceholder = itemPlaceholder.slice(0, -2) + itemPlaceholder.slice(-1) + 'is typing ...';
+            // if (checkTypingNotif && lastElement.textContent === itemPlaceholder) {
+            //   item.remove();
+            // }
+            // else {
+            //   item.remove();
+              // checkTypingNotif && messages.removeChild(lastElement);
+              // item.textContent = `${itemPlaceholder}`;
+              // messages.appendChild(item);
+              // item.classList.add('general');
+              // window.scrollTo(0, document.body.scrollHeight);
+            // }
+
     </script>
   </body>
 </html>

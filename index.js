@@ -31,6 +31,7 @@ const __dirname = path.dirname(__filename);
 const workerId = process.env.WORKER_ID;
 const port = process.env.PORT;
 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+var usernameArray = ['User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8'];
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
@@ -38,9 +39,9 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
   try {
-  socket.username = `User${(workerId)}`;
+  socket.username = usernameArray[workerId-1];
   const d = new Date(Date.now());
-  // io.emit('send data', { workerId: workerId });
+  io.emit('send data', { workerId: workerId, username: socket.username });
   socket.emit('chat message', {message: `${daysOfWeek[d.getDay()]} - ${d.getHours()}:${d.getMinutes()}`});
   // socket.broadcast.emit('chat message', { message: `${socket.username} has joined the chat`});
   io.emit('chat message', null);
@@ -48,12 +49,12 @@ io.on('connection', (socket) => {
   socket.on('change username', (usernameSubmitted) => {
     const oldUsername = socket.username;
     socket.username = usernameSubmitted;
-    io.emit('send data', { workerId: workerId, username: socket.username});
-    // socket.broadcast.emit('chat message', { message: `${oldUsername} changed their username to ${socket.username}`});
+    socket.emit('send data', { workerId: workerId, username: socket.username});
+    io.emit('chat message', { message: `${oldUsername} changed their username to ${socket.username}`});
   });
 
   socket.on('chat message', (messageSubmitted) => {
-    io.emit('send data', { workerId: workerId });
+    io.emit('send data', { workerId: workerId, username: socket.username });
     socket.emit('chat message', { message: messageSubmitted, class: 'local'});
     socket.broadcast.emit('chat message', { message: messageSubmitted, class: 'non-local'});
     io.emit('chat message', null);
