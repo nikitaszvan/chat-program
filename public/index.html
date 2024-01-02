@@ -2,121 +2,13 @@
 <html>
   <head>
     <title>Socket.IO chat</title>
-    <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-
-      #username-form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; top: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      
-      #messages {
-        top: 3rem;
-        list-style-type: none;
-        margin: 0; 
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        font-size: 14px;
-        color: rgb(0, 0, 0, 0.7);
-      }
-
-      .worker-1, .worker-2, .worker-3, .worker-4, .worker-5, .worker-6 {
-        max-width: 200px;
-        overflow-wrap: break-word;
-        border-radius: 20px;
-        padding: 8px 15px 8px 15px;
-        margin-top: 2px;
-        margin-bottom: 2px;
-        font-family: helvetica;
-        color: black;
-      } 
-
-      .local {
-        font-size: 12px;
-        margin-right: 25px;
-        align-self: flex-end;
-        border-bottom-right-radius: 0;
-      }
-
-      .non-local {
-        font-size: 12px;
-        margin-left: 25px;
-        align-self: flex-start;
-        border-bottom-left-radius: 0;
-      }
-
-      .general {
-        font-size: 12px;
-        margin: 0;
-        align-self: center;
-      }
-
-      .not-last-message {
-        border-radius: 20px;
-      }
-
-      .message-username {
-        display: flex;
-        align-items: center;
-      }
-
-      .message-username > p {
-        margin: 0;
-      }
-
-      .local.username-label > p {
-        margin-right: 4px;
-      }
-
-      .non-local.username-label > p {
-        margin-left: 4px;
-      }
-
-      .status-symbol {
-        border-radius: 50%;
-        background-color: green;
-        height: 8px;
-        width: 8px;
-        margin-top: 4px;
-      }
-
-      .typing {}
-
-      .offline {
-        background-color: grey;
-      }
-
-      .worker-1 {
-        background-color: #99B898;
-      }
-
-      .worker-2 {
-        background-color: #FECEA8;
-      }
-
-      .worker-3 {
-        background-color: #FF847C;
-      }
-
-      .worker-4 {
-        background-color: #E84A5F;
-      }
-
-      .worker-5 {
-        background-color: #2A363B;
-      }
-
-      #messages-form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      #messages-input { width: 90%; }
-
-      #messages-form > button {
-        background-color: transparent;
-        border: none;
-      }
-    </style>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <form id="username-form" action="">
-      <input id="username-input" autocomplete="off" /><button>Change Username</button>
-    </form>
+    <header>
+      <h1>Groupchat Name</h1>
+      <div class="settings"></div>
+    </header>
     <ul id="messages" ></ul>
     <form id="messages-form" action="">
       <input id="messages-input" autocomplete="off" /><button>Send</button>
@@ -125,24 +17,25 @@
     <script>
       var socket = io();
       var messages = document.getElementById('messages');
-      var usernameForm = document.getElementById('username-form');
-      var usernameInput = document.getElementById('username-input');
+      // var usernameForm = document.getElementById('username-form');
+      // var usernameInput = document.getElementById('username-input');
       var messagesForm = document.getElementById('messages-form');
       var messagesInput = document.getElementById('messages-input');
 
       var typingArray = new Array(12).fill(!1);
+      var statusArray = new Array(12).fill(!1);
       // var checkTypingNotif;
       var itemPlaceholder;
       let username;
 
-      usernameForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (usernameInput.value) {
+      // usernameForm.addEventListener('submit', (e) => {
+      //   e.preventDefault();
+      //   if (usernameInput.value) {
 
-          socket.emit('change username', usernameInput.value);
-          usernameInput.value = '';
-        }
-      });
+      //     socket.emit('change username', usernameInput.value);
+      //     usernameInput.value = '';
+      //   }
+      // });
 
       messagesForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -159,54 +52,81 @@
       socket.on('send data', function(data) {
         workerId = data.workerId;
         username = data.username;
+
         const workerIndex = workerId-1;
-        typingArray[workerIndex] = data.disconnect ? false : Boolean(data.inputContent);
+        typingArray[workerIndex] = data.disconnect ? data.disconnect : Boolean(data.inputContent);
+        statusArray[workerIndex] = data.disconnect == undefined ? true : false ;
+
+        if (document.querySelector(`.status-symbol.worker-${workerId}`)) {
+          const statusSymbols = document.querySelectorAll(`.status-symbol.worker-${workerId}`);
+
+          statusSymbols.forEach((statusSymbol) => {
+            if (typingArray[workerIndex]) {
+              statusSymbol.classList.remove('online');
+              statusSymbol.classList.add('typing');
+            }
+            else if (statusArray[workerIndex]) {
+              statusSymbol.classList.remove('typing');
+              statusSymbol.classList.add('online');
+            } else {
+              statusSymbol.classList.remove('online');
+            }
+          });
+        }
       });
 
       socket.on('chat message', function(data) {
+        window.scrollTo(0, document.body.scrollHeight);
         const lastElement = messages.lastElementChild;
         var item = document.createElement('li');
+        var time = document.createElement('p');
+        time.style.display = 'none';
         var messageUsername = document.createElement('div');
         var statusSymbol = document.createElement('div');
         statusSymbol.classList.add('status-symbol');
+        statusSymbol.classList.add(`worker-${workerId}`);
+        statusSymbol.classList.add(`online`);
         var usernameLabel = document.createElement('p');
         const allFalseArray = typingArray.every(value => value === false);
-        // checkTypingNotif =  lastElement && lastElement.textContent.includes('is typing ...') && lastElement.classList.contains('general');
 
         messageUsername.classList.add('message-username');
 
+        item.addEventListener('click', () => {
+          time.style.display = (time.style.display === 'none') ? 'block' : 'none';
+        });
+
         if (data) {
           item.textContent = `${data.message}`;
-          // checkTypingNotif ? messages.insertBefore(item, lastElement) : 
-          window.scrollTo(0, document.body.scrollHeight);
+          time.textContent = new Date(Date.now()).toLocaleString('en-US', {hour: '2-digit', minute: '2-digit'});
           if (data.class) {
             if (data.class == 'local') {
               messageUsername.appendChild(usernameLabel);
               messageUsername.appendChild(statusSymbol);
             }
-
             else {
               messageUsername.appendChild(statusSymbol);
               messageUsername.appendChild(usernameLabel);
             }
             item.classList.add(data.class);
+            time.classList.add(data.class);
             messageUsername.classList.add(data.class);
             messageUsername.classList.add('username-label');
             item.classList.add(`worker-${workerId}`);
-            if (lastElement && (item.classList.value == lastElement.classList.value)) {
-            lastElement.classList.add('not-last-message');
-          }
-          }
-          else {
-            if (!data.class) {
-              item.classList.add('general');
+            time.classList.add(`worker-${workerId}`);
+            if (lastElement && lastElement.previousElementSibling && (item.classList.value == lastElement.previousElementSibling.classList.value)) {
+              lastElement.previousElementSibling.classList.add('not-last-message');
             }
           }
+          else {
+            item.classList.add('general');
+          }
+
 
           if (lastElement && !lastElement.classList.contains(`worker-${workerId}`)) {
             usernameLabel.textContent = username;
             if (!item.textContent.includes('changed their username to') && !item.classList.contains('general')) {
-              messages.appendChild(messageUsername);
+              messages.appendChild(messageUsername)
+              item.classList.add('first-message');
             }
             else {
               messageUsername.remove();
@@ -216,10 +136,10 @@
             messageUsername.remove();
           }
           messages.appendChild(item);
+          messages.appendChild(time);
         }
-
-        
       });
+
         // else {
         //   if (allFalseArray) {
             // if (checkTypingNotif) {
@@ -245,7 +165,7 @@
               // item.classList.add('general');
               // window.scrollTo(0, document.body.scrollHeight);
             // }
-
+            
     </script>
   </body>
 </html>
