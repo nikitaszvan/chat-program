@@ -57,8 +57,8 @@
         typingArray[workerIndex] = data.disconnect ? data.disconnect : Boolean(data.inputContent);
         statusArray[workerIndex] = data.disconnect == undefined ? true : false ;
 
-        if (document.querySelector(`.status-symbol.worker-${workerId}`)) {
-          const statusSymbols = document.querySelectorAll(`.status-symbol.worker-${workerId}`);
+        if (document.querySelector(`img.status-symbol.worker-${workerId}`)) {
+          const statusSymbols = document.querySelectorAll(`img.status-symbol.worker-${workerId}`);
 
           statusSymbols.forEach((statusSymbol) => {
             if (typingArray[workerIndex]) {
@@ -79,14 +79,17 @@
         window.scrollTo(0, document.body.scrollHeight);
         const lastElement = messages.lastElementChild;
         var item = document.createElement('li');
+        var firstMessageDiv = document.createElement('div');
+        firstMessageDiv.classList.add('first-message-div');
+        var profilePicture = document.createElement('img');
+        profilePicture.src = `images/worker${workerId}_profile_pic.jpg`;
+        profilePicture.alt = `worker${workerId} profile picture`;
         var time = document.createElement('p');
         time.style.display = 'none';
-        var messageUsername = document.createElement('div');
-        var statusSymbol = document.createElement('div');
-        statusSymbol.classList.add('status-symbol');
-        statusSymbol.classList.add(`worker-${workerId}`);
-        statusSymbol.classList.add(`online`);
-        var usernameLabel = document.createElement('p');
+        var messageUsername = document.createElement('li');
+        profilePicture.classList.add('status-symbol');
+        profilePicture.classList.add(`worker-${workerId}`);
+        profilePicture.classList.add(`online`);
         const allFalseArray = typingArray.every(value => value === false);
 
         messageUsername.classList.add('message-username');
@@ -99,18 +102,10 @@
           item.textContent = `${data.message}`;
           time.textContent = new Date(Date.now()).toLocaleString('en-US', {hour: '2-digit', minute: '2-digit'});
           if (data.class) {
-            if (data.class == 'local') {
-              messageUsername.appendChild(usernameLabel);
-              messageUsername.appendChild(statusSymbol);
-            }
-            else {
-              messageUsername.appendChild(statusSymbol);
-              messageUsername.appendChild(usernameLabel);
-            }
             item.classList.add(data.class);
             time.classList.add(data.class);
+            firstMessageDiv.classList.add(data.class);
             messageUsername.classList.add(data.class);
-            messageUsername.classList.add('username-label');
             item.classList.add(`worker-${workerId}`);
             time.classList.add(`worker-${workerId}`);
             if (lastElement && lastElement.previousElementSibling && (item.classList.value == lastElement.previousElementSibling.classList.value)) {
@@ -121,22 +116,41 @@
             item.classList.add('general');
           }
 
-
           if (lastElement && !lastElement.classList.contains(`worker-${workerId}`)) {
-            usernameLabel.textContent = username;
+            messageUsername.textContent = username;
             if (!item.textContent.includes('changed their username to') && !item.classList.contains('general')) {
+              console.log('1');
               messages.appendChild(messageUsername)
+              if (data.class == 'local') {
+                console.log('2');
+                firstMessageDiv.appendChild(item);
+                firstMessageDiv.appendChild(profilePicture);
+              }
+              else {
+                console.log('3');
+                firstMessageDiv.appendChild(profilePicture);
+                firstMessageDiv.appendChild(item);
+              }
+              messages.appendChild(firstMessageDiv);
               item.classList.add('first-message');
+              messages.appendChild(time);
             }
             else {
               messageUsername.remove();
+              firstMessageDiv.remove();
+              profilePicture.remove();
+              messages.appendChild(item);
+              messages.appendChild(time);
             }
           }
           else {
             messageUsername.remove();
+            firstMessageDiv.remove();
+            profilePicture.remove();
+            messages.appendChild(item);
+            messages.appendChild(time);
           }
-          messages.appendChild(item);
-          messages.appendChild(time);
+
         }
       });
 
