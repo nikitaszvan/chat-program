@@ -21,6 +21,10 @@ header {
   background-color: lightgray;
 }
 
+.body-container {
+  display: flex;
+}
+
 #messages {
   top: 3rem;
   list-style-type: none;

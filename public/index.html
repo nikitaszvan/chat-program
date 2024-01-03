@@ -9,7 +9,11 @@
       <h1>Groupchat Name</h1>
       <div class="settings"></div>
     </header>
-    <ul id="messages" ></ul>
+    <div class="body-container">
+      <div class="chat-list"></div>
+      <ul id="messages" ></ul>
+      <div class="group-members"></div>
+    </div>
     <form id="messages-form" action="">
       <input id="messages-input" autocomplete="off" /><button>Send</button>
     </form>
@@ -154,32 +158,6 @@
         }
       });
 
-        // else {
-        //   if (allFalseArray) {
-            // if (checkTypingNotif) {
-            // messages.removeChild(lastElement);
-            // }
-          // }
-          // else {
-            // itemPlaceholder = '';
-            // typingArray.forEach((value, index) => {
-            //   if (value) {
-            //     itemPlaceholder = itemPlaceholder + usernameArray[index] + ', ';
-            //   }
-            // });
-            // itemPlaceholder = itemPlaceholder.slice(0, -2) + itemPlaceholder.slice(-1) + 'is typing ...';
-            // if (checkTypingNotif && lastElement.textContent === itemPlaceholder) {
-            //   item.remove();
-            // }
-            // else {
-            //   item.remove();
-              // checkTypingNotif && messages.removeChild(lastElement);
-              // item.textContent = `${itemPlaceholder}`;
-              // messages.appendChild(item);
-              // item.classList.add('general');
-              // window.scrollTo(0, document.body.scrollHeight);
-            // }
-            
     </script>
   </body>
 </html>
