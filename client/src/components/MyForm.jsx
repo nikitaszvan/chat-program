@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { socket } from '../socket.js';
 
 export function MyForm() {
@@ -61,7 +61,6 @@ export function MyForm() {
         />
         <button 
           type="submit"
-          disabled={ isLoading }
         >Send</button>
       </form>
     </div>
