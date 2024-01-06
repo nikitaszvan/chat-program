@@ -35,9 +35,9 @@ export default function App() {
 
   return (
     <div className="App">
-      <ConnectionState isConnected={ isConnected } />
+      {/* <ConnectionState isConnected={ isConnected } /> */}
       <Events events={ fooEvents } />
-      <ConnectionManager />
+      {/* <ConnectionManager /> */}
       <MyForm />
     </div>
   );

@@ -16,11 +16,9 @@ const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
-    console.log(`User Connected: ${socket.id}`);
-
-    socket.on("sendMessage", ({ msg }) => {
-        io.emit("message", { msg });
-      });
+    socket.on("sendMessage", ({ user, msg }) => {
+        io.emit("message", { user, msg });
+    });
 });
 
 server.listen(4000, () => {

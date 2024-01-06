@@ -10,6 +10,7 @@ export function MyForm() {
       socket.on("message", (value) => {
         setMessages([...messages, value]);
         let element = document.getElementById("messages");
+        console.log(socket.id);
         element.scrollTop = element.scrollHeight;
       });
     }
@@ -22,30 +23,23 @@ export function MyForm() {
   function handleSendMessage(e) {
     e.preventDefault();
     if (value && socket) {
-      socket.emit("sendMessage", { msg: value });
+      socket.emit("sendMessage", { user: socket.id, msg: value });
       setValue("");
     }
   }
 
   function renderMessage(item, index) {
     return (
-        <div key={index}>
-            {item.msg}
-        </div>
+      <li key={index} style={item.user === socket.id? {alignSelf: 'flex-end'} : {alignSelf: 'flex-start'}}>
+        {item.msg}
+      </li>
     );
 }
 
   return (
-    <div className="App">
-      <div className="chat-list"></div>
-      <header>
-        <h1>Groupchat Name</h1>
-        <div className="settings"></div>
-      </header>
+    <>
       <div id="messages">
-        <div className="">
-          {messages?.map((item, index) => renderMessage(item, index))}
-        </div>
+        {messages?.map((item, index) => renderMessage(item, index))}
       </div>
       <form 
         id="messages-form"
@@ -63,6 +57,6 @@ export function MyForm() {
           type="submit"
         >Send</button>
       </form>
-    </div>
+    </>
   );
 }
