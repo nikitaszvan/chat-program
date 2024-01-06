@@ -23,8 +23,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server,  {
     connectionStateRecovery: {},
-    adapter: createAdapter()
+    adapter: createAdapter(),
+    cors: {
+      origin: "*"
+    }
   });
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -35,7 +39,7 @@ var usernameArray = ['Maggie', 'Gerald', 'Hannah', 'Sophie', 'Clyde', 'Stuart', 
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/public/index.html');
 });
 
 io.on('connection', (socket) => {
