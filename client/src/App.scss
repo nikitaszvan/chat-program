@@ -59,15 +59,14 @@ header {
 
 li {
     &.local, &.non-local {
-        &.worker-1, &.worker-2, &.worker-3, &.worker-4, &.worker-5 {
-            max-width: 60vw;
-            overflow-wrap: break-word;
-            padding: 8px 15px 8px 15px;
-            margin-top: 4px;
-            margin-bottom: 4px;
-            color: black;
-            font-size: 14px;
-        }
+        max-width: 30vw;
+        overflow-wrap: break-word;
+        padding: 8px 15px 8px 15px;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        color: black;
+        font-size: 14px;
+        background-color: #99B898;
     }
 }
 

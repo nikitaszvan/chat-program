@@ -55,14 +55,15 @@ header {
   flex: 0 0 20%;
 }
 
-li.local.worker-1, li.local.worker-2, li.local.worker-3, li.local.worker-4, li.local.worker-5, li.non-local.worker-1, li.non-local.worker-2, li.non-local.worker-3, li.non-local.worker-4, li.non-local.worker-5 {
-  max-width: 60vw;
+li.local, li.non-local {
+  max-width: 30vw;
   overflow-wrap: break-word;
   padding: 8px 15px 8px 15px;
   margin-top: 4px;
   margin-bottom: 4px;
   color: black;
   font-size: 14px;
+  background-color: #99B898;
 }
 
 ul > .local {

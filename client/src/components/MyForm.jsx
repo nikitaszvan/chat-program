@@ -30,17 +30,17 @@ export function MyForm() {
 
   function renderMessage(item, index) {
     return (
-      <li key={index} style={item.user === socket.id? {alignSelf: 'flex-end'} : {alignSelf: 'flex-start'}}>
+      <li key={index} className={item.user === socket.id? 'local' : 'non-local'}>
         {item.msg}
       </li>
     );
-}
+  }
 
   return (
     <>
-      <div id="messages">
+      <ul id="messages">
         {messages?.map((item, index) => renderMessage(item, index))}
-      </div>
+      </ul>
       <form 
         id="messages-form"
         onSubmit={ handleSendMessage }
