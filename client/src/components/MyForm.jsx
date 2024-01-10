@@ -1,41 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { socket } from '../socket.js';
 
-export function MyForm() {
+function Message({ socket }) {
   let [messages, setMessages] = useState([]);
-  const [value, setValue] = useState('');
-  const [lastSenderId, setLastSenderId] = useState(null);
+  let [message, setMessage] = useState("");
+  const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     if (socket) {
-      socket.on("message", (value) => {
-        setMessages([...messages, value]);
+      socket.on("message", (message) => {
+        setMessages([...messages, message]);
         let element = document.getElementById("messages");
         element.scrollTop = element.scrollHeight;
       });
     }
+
     return () => {
       socket?.off("message");
     };
   });
 
+  function handleInput(e) {
+    e.preventDefault();
+    setMessage(e.target.value);
+  }
+
   function handleSendMessage(e) {
     e.preventDefault();
-    if (value && socket) {
-      socket.emit("sendMessage", { user: socket.id, msg: value });
-      setLastSenderId(socket.id);
-      setValue("");
+    if (message && socket) {
+      socket.emit("sendMessage", { name: user.name, msg: message, room });
+      setMessage("");
     }
   }
 
   function renderMessage(item, index) {
+    if (item.name !== "Admin")
+      return (
+        <div
+          key={index}
+          className={
+            item.name === user.name ? "flex justify-end" : "flex justify-start"
+          }
+        >
+          <div
+            key={index}
+            className={
+              item.name === user.name
+                ? "w-auto max-w-full inline-block p-2 rounded-xl bg-blue-500 my-1 text-white"
+                : "w-auto max-w-full inline-block p-2 rounded-xl bg-gray-400 my-1"
+            }
+          >
+            <p className="text-xs font-bold w-auto max-w-full">{item.name}</p>
+            <p className="w-auto max-w-full">{item.msg}</p>
+          </div>
+        </div>
+      );
     return (
-      <li key={index} className={`${item.user === socket.id? 'local' : 'non-local'} ${item.user !== lastSenderId ? 'first-message' : ''}`} >
-        {item.msg} : {item.user} : {lastSenderId}
-      </li>
+      <div key={index} className="flex justify-center text-gray-400">
+        {item.msg}
+      </div>
     );
   }
-  
   return (
     <>
       <ul id="messages">
@@ -48,10 +73,8 @@ export function MyForm() {
         <input
           id="messages-input"
           autoComplete="off"
-          value={ value }
-          onChange={(e) => {
-            setValue(e.target.value);
-          }}
+          value = {inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
         />
         <button 
           type="submit"
