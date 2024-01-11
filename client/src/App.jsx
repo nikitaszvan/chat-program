@@ -3,7 +3,7 @@ import { socket } from './socket.js';
 import { ConnectionState } from './components/ConnectionState.jsx';
 import { ConnectionManager } from './components/ConnectionManager.jsx';
 import { Events } from "./components/Events.jsx";
-import { MyForm } from './components/MyForm.jsx';
+import MyForm from './components/MyForm.jsx';
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
